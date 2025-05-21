@@ -4,30 +4,26 @@ describe('Basic user flow for Website', () => {
     await page.goto('https://cse110-sp25.github.io/CSE110-Shop/');
   });
 
-  // -------------- STEP 0  (already supplied) -----------------
   it('Initial Home Page - Check for 20 product items', async () => {
     console.log('Checking for 20 product items...');
     const numProducts = await page.$$eval('product-item', (prodItems) => prodItems.length);
     expect(numProducts).toBe(20);
   });
 
-  // -------------- STEP 1 ------------------------------------
 it('Make sure <product-item> elements are populated', async () => {
   console.log('Checking to make sure <product-item> elements are populated…');
 
-  /* wait until every <product-item> has its data object */
   await page.waitForFunction(
     () => Array.from(document.querySelectorAll('product-item')).every(el => el.data),
     { timeout: 5000 }
   );
 
-  /* verify title, image, and price are all present */
   const allArePopulated = await page.$$eval('product-item', items =>
     items.every(({ data }) =>
       data &&
       data.title && data.title.length > 0 &&
       data.image && data.image.length > 0 &&
-      data.price !== undefined              // price is a number, just ensure it exists
+      data.price !== undefined             
     )
   );
 
@@ -35,32 +31,26 @@ it('Make sure <product-item> elements are populated', async () => {
 }, 10_000);
 
 
-  // -------------- STEP 2  ------------------------------------
   it('Clicking the "Add to Cart" button should change button text', async () => {
     console.log('Checking the "Add to Cart" button…');
 
-    // grab the first <product-item>
     const prodItem = await page.$('product-item');
 
-    // reach into its shadow DOM and pull out the <button>
     const buttonHandle = await prodItem.evaluateHandle(
       (elem) => elem.shadowRoot.querySelector('button')
     );
 
-    // click & read the updated text
     await buttonHandle.click();
     const innerText = await (await buttonHandle.getProperty('innerText')).jsonValue();
 
     expect(innerText).toBe('Remove from Cart');
   }, 2_500);
 
-  // -------------- STEP 3  ------------------------------------
   it('Checking number of items in cart on screen', async () => {
     console.log('Checking number of items in cart on screen…');
 
     const prodItems = await page.$$('product-item');
 
-    // add every item that is NOT already in the cart
     for (const item of prodItems) {
       const btn = await item.evaluateHandle((elem) =>
         elem.shadowRoot.querySelector('button')
@@ -73,7 +63,6 @@ it('Make sure <product-item> elements are populated', async () => {
     expect(cartCount).toBe('20');
   }, 10_000);
 
-  // -------------- STEP 4  ------------------------------------
   it('Checking number of items in cart on screen after reload', async () => {
     console.log('Checking number of items in cart on screen after reload…');
     await page.reload();
@@ -95,7 +84,6 @@ it('Make sure <product-item> elements are populated', async () => {
     expect(cartCount).toBe('20');
   }, 10_000);
 
-  // -------------- STEP 5  ------------------------------------
   it('Checking the localStorage to make sure cart is correct', async () => {
     const cart = await page.evaluate(() => localStorage.getItem('cart'));
     expect(cart).toBe(
@@ -103,7 +91,6 @@ it('Make sure <product-item> elements are populated', async () => {
     );
   });
 
-  // -------------- STEP 6  ------------------------------------
   it('Checking number of items in cart on screen after removing from cart', async () => {
     console.log('Removing all items from cart…');
 
@@ -121,7 +108,6 @@ it('Make sure <product-item> elements are populated', async () => {
     expect(cartCount).toBe('0');
   }, 10_000);
 
-  // -------------- STEP 7  ------------------------------------
   it('Checking number of items in cart on screen after reload', async () => {
     console.log('Checking number of items in cart on screen after reload…');
     await page.reload();
@@ -143,7 +129,6 @@ it('Make sure <product-item> elements are populated', async () => {
     expect(cartCount).toBe('0');
   }, 10_000);
 
-  // -------------- STEP 8  ------------------------------------
   it('Checking the localStorage to make sure cart is correct', async () => {
     console.log('Checking the localStorage…');
     const cart = await page.evaluate(() => localStorage.getItem('cart'));
