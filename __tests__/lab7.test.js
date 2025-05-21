@@ -11,30 +11,29 @@ describe('Basic user flow for Website', () => {
     expect(numProducts).toBe(20);
   });
 
-  // -------------- STEP 1  ------------------------------------
-  it('Make sure <product-item> elements are populated', async () => {
+  // -------------- STEP 1 ------------------------------------
+it('Make sure <product-item> elements are populated', async () => {
   console.log('Checking to make sure <product-item> elements are populated…');
 
-  // wait at most 5 s for every item to finish loading its data
-  await page.waitForFunction(() =>
-    Array.from(document.querySelectorAll('product-item'))
-      .every(el => el.data && el.data.title)
-  , { timeout: 5000 });
+  /* wait until every <product-item> has its data object */
+  await page.waitForFunction(
+    () => Array.from(document.querySelectorAll('product-item')).every(el => el.data),
+    { timeout: 5000 }
+  );
 
+  /* verify title, image, and price are all present */
   const allArePopulated = await page.$$eval('product-item', items =>
-    items.every(item => {
-      const data = item.data;
-      return (
-        data &&
-        data.title  && data.title.length  > 0 &&
-        data.price  && data.price.length  > 0 &&
-        data.image  && data.image.length  > 0
-      );
-    })
+    items.every(({ data }) =>
+      data &&
+      data.title && data.title.length > 0 &&
+      data.image && data.image.length > 0 &&
+      data.price !== undefined              // price is a number, just ensure it exists
+    )
   );
 
   expect(allArePopulated).toBe(true);
 }, 10_000);
+
 
   // -------------- STEP 2  ------------------------------------
   it('Clicking the "Add to Cart" button should change button text', async () => {
