@@ -13,23 +13,28 @@ describe('Basic user flow for Website', () => {
 
   // -------------- STEP 1  ------------------------------------
   it('Make sure <product-item> elements are populated', async () => {
-    console.log('Checking to make sure <product-item> elements are populated…');
+  console.log('Checking to make sure <product-item> elements are populated…');
 
-    const prodItems = await page.$$('product-item');
-    let allArePopulated = true;
+  // wait at most 5 s for every item to finish loading its data
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll('product-item'))
+      .every(el => el.data && el.data.title)
+  , { timeout: 5000 });
 
-    for (let i = 0; i < prodItems.length; ++i) {
-      console.log(`Checking product item ${i + 1}/${prodItems.length}`);
-      const dataHandle = await prodItems[i].getProperty('data');
-      const data = await dataHandle.jsonValue();          // ⇐ JSON inside <product-item>
+  const allArePopulated = await page.$$eval('product-item', items =>
+    items.every(item => {
+      const data = item.data;
+      return (
+        data &&
+        data.title  && data.title.length  > 0 &&
+        data.price  && data.price.length  > 0 &&
+        data.image  && data.image.length  > 0
+      );
+    })
+  );
 
-      // verify every key we care about is non-empty
-      if (!data.title   || data.title.length   === 0) allArePopulated = false;
-      if (!data.price   || data.price.length   === 0) allArePopulated = false;
-      if (!data.image   || data.image.length   === 0) allArePopulated = false;
-    }
-    expect(allArePopulated).toBe(true);
-  }, 10_000);
+  expect(allArePopulated).toBe(true);
+}, 10_000);
 
   // -------------- STEP 2  ------------------------------------
   it('Clicking the "Add to Cart" button should change button text', async () => {
